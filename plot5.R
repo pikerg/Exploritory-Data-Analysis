@@ -27,14 +27,19 @@
 ##    *year: The year of emissions recorded
 ##
 ##################################################################################
+##
+##  Required packages:
+##    install.packages("ggplot2")
+##    library(ggplot2)
+##################################################################################
 
 ## Set file path to the Source_Clasification_Code.rds file
 ##  This table provides a mapping from the SCC digit strings
 ##  in the Emissions table to the actual name of the PM2.5 source.
 ##  The sources are categorized in a few different ways from more
 ##  general to more specific and you may choose to explore whatever
-##  categories you think are most useful. For example, source “10100101”
-##  is known as “Ext Comb /Electric Gen /Anthracite Coal /Pulverized Coal”.
+##  categories you think are most useful. For example, source "10100101"
+##  is known as "Ext Comb /Electric Gen /Anthracite Coal /Pulverized Coal".
 file_code <- "./exdata_data_NEI_data/Source_Classification_Code.rds"
 file_data <- "./exdata_data_NEI_data/summarySCC_PM25.rds"
 
@@ -45,18 +50,29 @@ NEI <- readRDS(file_data)
 ## Make Emissions column data numbers
 NEI$Emissions <- as.numeric(NEI$Emissions)
 
+## Merge the 2 data sets
+COMP_DATA <- merge(SCC, NEI, by="SCC")
+
 ## Subset data on the city of Baltimore (fips=='24510')
-baltimore_NEI <- NEI[NEI$fips=='24510',]
+baltimore_COMP_DATA <- COMP_DATA[COMP_DATA$fips=='24510',]
+
+## Subset data on the EI.Sector = mobile
+mobile <- grepl('mobile', baltimore_COMP_DATA$EI.Sector, ignore.case=TRUE)
+baltimore_mobile  <- baltimore_COMP_DATA[mobile,]
 
 ## Sum total polutants by year
-x_baltimore_NEI <- aggregate(Emissions ~ year, data=baltimore_NEI, sum)
+baltimore_mobile <- aggregate(Emissions ~ year, data=baltimore_mobile, sum)
 
 ## Save the file
-png(file="plot2.png", width=480, height=480)
+png(file="plot5.png", width=480, height=480)
 
-## Plot PM2.5 for Baltimore City, Maryland
-barplot(height=x_baltimore_NEI$Emissions, names.arg=x_baltimore_NEI$year, xlab='Year',
-        ylab='PM2.5 Pollutant', main='Total PM2.5 Emissions for Baltimore City, Maryland')
+## Plot PM2.5 emissions from motor vehicle sources in Baltimore City
+plt <- ggplot(baltimore_mobile, aes(factor(year), Emissions)) +
+  geom_bar(stat="identity", fill="#00b36e") +
+  labs(x='Year',
+       y=expression('Total PM"[2.5]*" Emissions, (On/Off-Road, Rail, Air, Pleasure Transport)'),
+       title='Emmissions From Motor Vehicles in Baltimore City')
+print(plt)
 
 ## required to close connection
 dev.off()
