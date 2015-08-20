@@ -26,6 +26,8 @@
 ##    *type: The type of source (point, non-point, on-road, or non-road)
 ##    *year: The year of emissions recorded
 ##
+##################################################################################
+##
 ##  Required packages:
 ##    install.packages("ggplot2")
 ##    library(ggplot2)
@@ -58,8 +60,8 @@ x_baltimore_NEI <- aggregate(Emissions ~ year + type, data=baltimore_NEI, sum)
 png(file="plot3.png", width=480, height=480)
 
 ## Plot PM2.5 for Baltimore City, Maryland on type c('point','nonpoint','onroad','nonroad')
-plt <- ggplot(x_baltimore_NEI, aes(year, Emissions, color=type)) +
-  geom_line() +
+plt <- ggplot(x_baltimore_NEI, aes(year, Emissions, fill=type)) +
+  geom_bar(stat="identity") +
   ggtitle('Baltimore City Emissions by Type')
 print(plt)
 
